@@ -27,6 +27,7 @@ backend/data/
 !package.json
 !package-lock.json
 !tsconfig.json
+!manifest.json
 !id_mapping.json # Depending on if you want to keep mapping
 
 
