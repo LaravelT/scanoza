@@ -46,6 +46,7 @@ backend.zip
 
 # Non-frontend and non-scanner-app exclusions
 backend/
+frontend/
 framestory/
 reference/
 .agents/
@@ -58,6 +59,7 @@ run_app.bat
 setup_env.py
 .env.local
 .env*
+
 
 
 
