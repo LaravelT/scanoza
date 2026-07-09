@@ -1,0 +1,36 @@
+{
+  "name": "scanoza-scanner",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3001 -H 0.0.0.0",
+    "build": "next build --webpack && copy /y public\\sw.js* out\\ && copy /y public\\workbox* out\\",
+    "start": "next start -p 3001",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/cli": "^8.4.0",
+    "@capacitor/core": "^8.4.0",
+    "@ducanh2912/next-pwa": "^10.2.9",
+    "axios": "^1.13.5",
+    "framer-motion": "^12.34.0",
+    "lucide-react": "^0.564.0",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-hot-toast": "^2.6.0",
+    "react-webcam": "^7.2.0"
+  },
+  "devDependencies": {
+    "@rollup/pluginutils": "^5.4.0",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

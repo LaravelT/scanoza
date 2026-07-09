@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanoza PWA Scanner POC</title>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --card-bg: rgba(20, 20, 20, 0.6);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text: #ffffff;
+            --text-muted: #a1a1aa;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Decorative background glow */
+        .glow-overlay {
+            position: fixed;
+            top: -10%;
+            right: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 24px;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+            margin: 0 auto 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: -0.05em;
+            background: linear-gradient(135deg, #ffffff 60%, #a1a1aa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            margin: 2px 0 0;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.4em;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        /* Camera Box & Reticle */
+        .camera-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 3/4;
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            background-color: #000;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(1); /* Set to -1 for front camera mirror */
+        }
+
+        /* Reticle corners */
+        .reticle {
+            position: absolute;
+            inset: 40px;
+            border: 1px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            pointer-events: none;
+        }
+
+        .corner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-color: var(--primary);
+            border-style: solid;
+            pointer-events: none;
+        }
+
+        .top-left { top: -2px; left: -2px; border-width: 3px 0 0 3px; border-top-left-radius: 12px; }
+        .top-right { top: -2px; right: -2px; border-width: 3px 3px 0 0; border-top-right-radius: 12px; }
+        .bottom-left { bottom: -2px; left: -2px; border-width: 0 0 3px 3px; border-bottom-left-radius: 12px; }
+        .bottom-right { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; border-bottom-right-radius: 12px; }
+
+        .scan-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(180deg, transparent, var(--primary), transparent);
+            box-shadow: 0 0 20px var(--primary);
+            animation: scanAnim 3s infinite ease-in-out;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        @keyframes scanAnim {
+            0% { top: 10%; }
+            50% { top: 90%; }
+            100% { top: 10%; }
+        }
+
+        /* UI Control elements */
+        .controls {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .url-input-container {
+            display: flex;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 4px 4px 4px 12px;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .url-input-container label {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-right: 8px;
+            white-space: nowrap;
+        }
+
+        .url-input-container input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
+            padding: 6px 0;
+        }
+
+        .btn {
+            background-color: var(--text);
+            color: var(--bg-color);
+            border: none;
+            border-radius: 14px;
+            padding: 14px;
+            font-weight: 800;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Result Panel */
+        .result-panel {
+            width: 100%;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 20px;
+            box-sizing: border-box;
+            backdrop-filter: blur(10px);
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 10px;
+        }
+
+        .status-badge {
+            font-size: 9px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .status-success {
+            background-color: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.2);
+        }
+
+        .status-fail {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.2);
+        }
+
+        .confidence {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
+        .result-body {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .result-title {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .attachment-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 8px 12px;
+            border-radius: 10px;
+            margin-top: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .attachment-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid currentColor;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="glow-overlay"></div>
+    <div class="container">
+        <header>
+            <div class="logo">SZ</div>
+            <h1>scanoza</h1>
+            <p class="subtitle">PWA Scanner POC</p>
+        </header>
+
+        <div class="camera-wrapper">
+            <video id="video" autoplay playsinline></video>
+            <div class="reticle">
+                <div class="corner top-left"></div>
+                <div class="corner top-right"></div>
+                <div class="corner bottom-left"></div>
+                <div class="corner bottom-right"></div>
+            </div>
+            <div class="scan-line" id="scanLine"></div>
+        </div>
+
+        <div class="controls">
+            <div class="url-input-container">
+                <label for="apiUrl">API URL:</label>
+                <input type="text" id="apiUrl" value="https://api.scanoza.com/api">
+            </div>
+            
+            <button id="scanBtn" class="btn btn-primary">
+                <span>Capture & Scan Frame</span>
+            </button>
+        </div>
+
+        <div class="result-panel" id="resultPanel">
+            <div class="result-header">
+                <span class="status-badge" id="statusBadge">Match Found</span>
+                <span class="confidence" id="confidenceVal">Confidence: 0.00%</span>
+            </div>
+            <div class="result-body" id="resultBody">
+                <!-- Dynamically filled -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden canvas for capturing frames -->
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const scanBtn = document.getElementById('scanBtn');
+        const apiUrlInput = document.getElementById('apiUrl');
+        const resultPanel = document.getElementById('resultPanel');
+        const statusBadge = document.getElementById('statusBadge');
+        const confidenceVal = document.getElementById('confidenceVal');
+        const resultBody = document.getElementById('resultBody');
+        const scanLine = document.getElementById('scanLine');
+
+        // Check window secure context
+        if (!window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            alert("Warning: Camera access (getUserMedia) requires a secure context (HTTPS) on mobile devices.");
+        }
+
+        // Initialize Camera
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: { ideal: 'environment' },
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                });
+                video.srcObject = stream;
+            } catch (err) {
+                console.error("Camera error: ", err);
+                alert("Could not start camera. Please verify camera permissions and that you are using HTTPS.");
+            }
+        }
+
+        // Capture Frame and POST to API
+        async function captureAndScan() {
+            setLoading(true);
+            resultPanel.style.display = 'none';
+
+            // Draw current video frame to canvas
+            const ctx = canvas.getContext('2d');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert canvas content to blob
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    alert("Failed to capture frame from video stream.");
+                    setLoading(false);
+                    return;
+                }
+
+                // Prepare Form Data
+                const formData = new FormData();
+                formData.append('frame', blob, 'frame.jpg');
+
+                const endpoint = `${apiUrlInput.value}/scan`;
+
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Server returned HTTP ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    displayResult(data);
+
+                } catch (err) {
+                    console.error("Scan Error: ", err);
+                    displayError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            }, 'image/jpeg', 0.85);
+        }
+
+        function setLoading(isLoading) {
+            if (isLoading) {
+                scanBtn.disabled = true;
+                scanBtn.innerHTML = '<div class="spinner"></div><span>Processing...</span>';
+                scanLine.style.animationDuration = '1s';
+            } else {
+                scanBtn.disabled = false;
+                scanBtn.innerHTML = '<span>Capture & Scan Frame</span>';
+                scanLine.style.animationDuration = '3s';
+            }
+        }
+
+        function displayResult(res) {
+            resultPanel.style.display = 'flex';
+            
+            if (res.matchFound && res.content) {
+                statusBadge.textContent = "Match Found";
+                statusBadge.className = "status-badge status-success";
+                confidenceVal.textContent = `Confidence: ${(res.confidence * 100).toFixed(2)}%`;
+                
+                const title = res.content.title || res.content.originalImageName || 'Scanned Target';
+                const type = res.content.type || 'video';
+                
+                let contentHtml = `
+                    <div class="result-title">${title}</div>
+                    <div style="font-size: 11px; text-transform: uppercase; color: var(--primary); font-weight: 700; margin-bottom: 8px;">Type: ${type}</div>
+                `;
+
+                // Handle text type
+                if (type === 'text') {
+                    contentHtml += `<div style="font-style: italic; color: #e4e4e7; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color);">${res.content.text}</div>`;
+                } else {
+                    const targetUrl = res.content.url || res.content.videoPath || '';
+                    if (targetUrl) {
+                        contentHtml += `
+                            <div style="font-size: 12px; color: var(--text-muted); word-break: break-all; margin-bottom: 10px;">URL: ${targetUrl}</div>
+                            <button onclick="window.open('${targetUrl}', '_blank')" class="btn btn-primary" style="padding: 8px 14px; font-size: 10px; width: auto; margin-top: 5px;">
+                                Open Content Link ↗
+                            </button>
+                        `;
+                    }
+                }
+
+                // Render extra attachments
+                if (res.attachments && res.attachments.length > 0) {
+                    contentHtml += `<div style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-top: 15px; margin-bottom: 5px;">Additional Attachments (${res.attachments.length})</div>`;
+                    res.attachments.forEach(att => {
+                        const attUrl = att.url || att.videoPath || '';
+                        contentHtml += `
+                            <div class="attachment-item" onclick="if('${attUrl}') window.open('${attUrl}', '_blank')">
+                                <span style="font-weight: 700;">[${att.type.toUpperCase()}]</span>
+                                <span>${att.title || 'Untitled Attachment'}</span>
+                            </div>
+                        `;
+                    });
+                }
+
+                resultBody.innerHTML = contentHtml;
+
+                // Auto-open PDF/External links
+                if (type === 'pdf' || (type !== 'video' && type !== 'image' && type !== 'text' && type !== 'audio')) {
+                    const targetUrl = res.content.url || res.content.videoPath || '';
+                    if (targetUrl) {
+                        setTimeout(() => {
+                            window.open(targetUrl, '_blank');
+                        }, 500);
+                    }
+                }
+
+            } else {
+                statusBadge.textContent = "No Match";
+                statusBadge.className = "status-badge status-fail";
+                confidenceVal.textContent = "";
+                resultBody.innerHTML = `<div style="color: var(--text-muted);">${res.message || 'No matched memory found in this frame.'}</div>`;
+            }
+        }
+
+        function displayError(errStr) {
+            resultPanel.style.display = 'flex';
+            statusBadge.textContent = "Error";
+            statusBadge.className = "status-badge status-fail";
+            confidenceVal.textContent = "";
+            resultBody.innerHTML = `
+                <div style="color: #f87171; font-weight: 700;">Network Request Failed</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">${errStr}</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+                    Make sure the backend server allows CORS requests from your current origin.
+                </div>
+            `;
+        }
+
+        // Event Listeners
+        scanBtn.addEventListener('click', captureAndScan);
+        
+        // Start camera on page load
+        window.addEventListener('load', startCamera);
+    </script>
+</body>
+</html>

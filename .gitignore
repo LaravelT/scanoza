@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+backend/venv/
+backend/.env
+
+# Node.js
+node_modules/
+.next/
+out/
+build/
+frontend/node_modules/
+scanner-app/node_modules/
+frontend/.env*
+scanner-app/.env*
+
+# Local Storage (Not for Git)
+uploads/
+backend/uploads/
+data/
+backend/data/
+*.bin
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!id_mapping.json # Depending on if you want to keep mapping
+
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Archives & Logs
+*.zip
+*.log
+backend.zip
+
+# Non-frontend and non-scanner-app exclusions
+backend/
+framestory/
+reference/
+.agents/
+.codex/
+CHANGE_AND_TEST_REPORT.md
+motive.md
+pwa_feasibility_report.md
+render_env.txt
+run_app.bat
+setup_env.py
+.env.local
+.env*
+
+
+

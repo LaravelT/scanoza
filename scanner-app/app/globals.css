@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+:root {
+  --primary: #3b82f6;
+  --primary-glow: rgba(59, 130, 246, 0.5);
+  --bg-dark: #050505;
+}
+
+body {
+  background: var(--bg-dark);
+  color: white;
+  overflow: hidden;
+  font-family: 'Outfit', sans-serif;
+}
+
+/* Premium Mesh Gradient Background */
+.mesh-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: #050505;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(147, 51, 234, 0.1) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+  filter: blur(80px);
+  opacity: 0.8;
+}
+
+/* Animated Scan Line */
+@keyframes scanning {
+  0% { transform: translateY(-100%); opacity: 0; }
+  10% { opacity: 0.5; }
+  90% { opacity: 0.5; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+
+.scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  box-shadow: 0 0 15px var(--primary);
+  animation: scanning 3s ease-in-out infinite;
+  z-index: 10;
+}
+
+/* Glassmorphism Utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #fff 0%, #3b82f6 50%, #9333ea 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
+}
+
+.logo-container {
+  position: relative;
+  border-radius: 40px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+  box-shadow: 
+    0 20px 40px rgba(0,0,0,0.4),
+    inset 0 0 0 1px rgba(255,255,255,0.1);
+  padding: 10px;
+}
+
+.glow-button::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, #3b82f6, #9333ea, #3b82f6);
+  z-index: -1;
+  filter: blur(10px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: inherit;
+}
+
+.glow-button:hover::after {
+  opacity: 0.6;
+}
+
+/* Logo Float Animation */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.float-anim {
+  animation: float 4s ease-in-out infinite;
+}
