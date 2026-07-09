@@ -42,3 +42,9 @@ local.properties
 /android/.idea/
 /android/local.properties
 *.log
+
+# PWA generated files
+/public/sw.js
+/public/sw.js.map
+/public/workbox-*.js
+/public/workbox-*.js.map
